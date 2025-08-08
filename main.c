@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 typedef enum {
     ARGUMENTS_PARSING_SUCCESS = 0,
@@ -11,8 +13,8 @@ typedef enum {
 
 typedef enum {
     FILE_PARSING_SUCCESS = 0,
-    ERROR_OPENING_FILE = 1,
-    ERROR_PARSING_LINE = 2,
+    ERROR_OPENING_FILE = 3,
+    ERROR_PARSING_LINE = 4,
 } file_parsing_error;
 
 arguments_parsing_error parse_arguments(const int number_of_arguments, char *arguments[], char **tar_dir) {
@@ -76,6 +78,19 @@ char *remove_spaces(const char *str) {
     return result;
 }
 
+int create_directory(const char *path) {
+    const int result = mkdir(path, 0755);
+
+    if (result != 0) {
+        if (errno == EEXIST) {
+            return 0;
+        }
+        return -1;
+    }
+
+    return 0;
+}
+
 int parse_line(int *spaces, char **parent, const char *line) {
     const size_t length = strlen(line);
 
@@ -91,11 +106,15 @@ int parse_line(int *spaces, char **parent, const char *line) {
         char *directory_name = remove_spaces(line);
         if (directory_name == NULL) return 1;
 
-        //TODO: Create directory here
-
+        const char *directory_path = directory_name + 1;
+        if (create_directory(directory_path) == -1) {
+            free(directory_name);
+            return 1;
+        }
 
         *spaces += 2;
         *parent = append_string(*parent, directory_name);
+        free(directory_name);
     } else {
         // TODO: Create file here
     }
