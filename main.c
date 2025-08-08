@@ -41,7 +41,7 @@ int parse_line(const char *line) {
         return 1;
     }
 
-    // Parse file here
+    // Parse line here
 
     return 0;
 }
@@ -52,8 +52,10 @@ file_parsing_error parse_file(const char *target_directory) {
         return ERROR_OPENING_FILE;
     }
 
-    char *line = NULL;
     size_t len = 0;
+    char *line = NULL;
+    int spaces = 0;
+    char *parent = "";
 
     while (getline(&line, &len, file) != -1) {
         const int line_parsing_error = parse_line(line);
