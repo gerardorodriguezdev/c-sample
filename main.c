@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,14 +35,28 @@ arguments_parsing_error parse_arguments(const int number_of_arguments, char *arg
     return ARGUMENTS_PARSING_SUCCESS;
 }
 
-int parse_line(const char *line) {
+int parse_line(int *spaces, char **parent, const char *line) {
     const size_t length = strlen(line);
 
-    if (length < 2) {
+    if (length < *spaces + 1) {
         return 1;
     }
 
-    // Parse line here
+    for (int i = 0; i < *spaces; i++) {
+        char current_char = line[i];
+        if (current_char != ' ') {
+            return 1;
+        }
+    }
+
+    bool isDirectory = line[*spaces] == '/';
+    if (isDirectory) {
+        //TODO: Create directory here
+        *spaces += 2;
+        // TODO: Update parent
+    } else {
+        // TODO: Create file here
+    }
 
     return 0;
 }
@@ -58,7 +73,7 @@ file_parsing_error parse_file(const char *target_directory) {
     char *parent = "";
 
     while (getline(&line, &len, file) != -1) {
-        const int line_parsing_error = parse_line(line);
+        const int line_parsing_error = parse_line(&spaces, &parent, line);
         if (line_parsing_error != 0) {
             return ERROR_PARSING_LINE;
         }
