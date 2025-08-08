@@ -50,14 +50,14 @@ char *append_string(char *dest, const char *src) {
 
         if (temp != NULL) {
             dest = temp;
-            strcpy(dest, src);
+            strcat(dest, src);
         }
     }
 
     return dest;
 }
 
-char *remove_spaces(const char *str) {
+char *remove_spaces_and_new_lines(const char *str) {
     if (str == NULL) return NULL;
 
     const size_t len = strlen(str);
@@ -67,7 +67,7 @@ char *remove_spaces(const char *str) {
 
     int j = 0;
     for (int i = 0; i < len; i++) {
-        if (str[i] != ' ') {
+        if (str[i] != ' ' && str[i] != '\n') {
             result[j] = str[i];
             j++;
         }
@@ -91,6 +91,16 @@ int create_directory(const char *path) {
     return 0;
 }
 
+int create_file(char *path) {
+    FILE *file = fopen(path, "w");
+    if (file == NULL) {
+        return -1;
+    }
+
+    fclose(file);
+    return 0;
+}
+
 int parse_line(int *spaces, char **parent, const char *line) {
     const size_t length = strlen(line);
 
@@ -103,10 +113,11 @@ int parse_line(int *spaces, char **parent, const char *line) {
 
     const bool isDirectory = line[*spaces] == '/';
     if (isDirectory) {
-        char *directory_name = remove_spaces(line);
+        char *directory_name = remove_spaces_and_new_lines(line);
         if (directory_name == NULL) return 1;
 
         const char *directory_path = directory_name + 1;
+
         if (create_directory(directory_path) == -1) {
             free(directory_name);
             return 1;
@@ -116,7 +127,21 @@ int parse_line(int *spaces, char **parent, const char *line) {
         *parent = append_string(*parent, directory_name);
         free(directory_name);
     } else {
-        // TODO: Create file here
+        char *file_name = remove_spaces_and_new_lines(line);
+        if (file_name == NULL) return 1;
+
+        char *file_path = NULL;
+        file_path = append_string(file_path, *parent);
+        file_path = append_string(file_path, "/");
+        file_path = append_string(file_path, file_name);
+        file_path = file_path + 1;
+
+        if (create_file(file_path) == -1) {
+            free(file_name);
+            return 1;
+        }
+
+        free(file_name);
     }
 
     return 0;
@@ -140,9 +165,7 @@ file_parsing_error parse_file(const char *target_directory) {
         }
     }
 
-    free(line);
     fclose(file);
-
     return FILE_PARSING_SUCCESS;
 }
 
