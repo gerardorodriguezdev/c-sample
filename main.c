@@ -35,25 +35,67 @@ arguments_parsing_error parse_arguments(const int number_of_arguments, char *arg
     return ARGUMENTS_PARSING_SUCCESS;
 }
 
-int parse_line(int *spaces, char **parent, const char *line) {
-    const size_t length = strlen(line);
+char *append_string(char *dest, const char *src) {
+    if (src == NULL) return dest;
 
-    if (length < *spaces + 1) {
-        return 1;
-    }
+    if (dest == NULL) {
+        dest = malloc(strlen(src) + 1);
+        if (dest != NULL)
+            strcpy(dest, src);
+    } else {
+        const size_t length = strlen(dest) + strlen(src) + 1;
+        char *temp = realloc(dest, length);
 
-    for (int i = 0; i < *spaces; i++) {
-        char current_char = line[i];
-        if (current_char != ' ') {
-            return 1;
+        if (temp != NULL) {
+            dest = temp;
+            strcpy(dest, src);
         }
     }
 
-    bool isDirectory = line[*spaces] == '/';
+    return dest;
+}
+
+char *remove_spaces(const char *str) {
+    if (str == NULL) return NULL;
+
+    const size_t len = strlen(str);
+    char *result = malloc(len + 1);
+
+    if (result == NULL) return NULL;
+
+    int j = 0;
+    for (int i = 0; i < len; i++) {
+        if (str[i] != ' ') {
+            result[j] = str[i];
+            j++;
+        }
+    }
+
+    result[j] = '\0';
+
+    return result;
+}
+
+int parse_line(int *spaces, char **parent, const char *line) {
+    const size_t length = strlen(line);
+
+    if (length < *spaces + 1) return 1;
+
+    for (int i = 0; i < *spaces; i++) {
+        const char current_char = line[i];
+        if (current_char != ' ') return 1;
+    }
+
+    const bool isDirectory = line[*spaces] == '/';
     if (isDirectory) {
+        char *directory_name = remove_spaces(line);
+        if (directory_name == NULL) return 1;
+
         //TODO: Create directory here
+
+
         *spaces += 2;
-        // TODO: Update parent
+        *parent = append_string(*parent, directory_name);
     } else {
         // TODO: Create file here
     }
@@ -70,7 +112,7 @@ file_parsing_error parse_file(const char *target_directory) {
     size_t len = 0;
     char *line = NULL;
     int spaces = 0;
-    char *parent = "";
+    char *parent = NULL;
 
     while (getline(&line, &len, file) != -1) {
         const int line_parsing_error = parse_line(&spaces, &parent, line);

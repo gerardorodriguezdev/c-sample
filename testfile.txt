@@ -1,2 +1,3 @@
 /ha
   /ho
+  myfile.txt
