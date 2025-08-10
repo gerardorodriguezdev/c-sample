@@ -1,5 +1,3 @@
-# CPlate
-
 A simple command line utility written in C for creating directory structures and files from text-based templates.
 
 ## Template format
